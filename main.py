@@ -9,7 +9,7 @@ import math
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'  # Required for flash messages
 
-AI_KEY = "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"
+AI_KEY = "your_API_key_here"
 
 client = Groq(api_key=AI_KEY)
 
