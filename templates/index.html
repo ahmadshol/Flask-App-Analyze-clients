@@ -1,14 +1,129 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Form analisis</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    <h1>Selamat Datang</h1>
-    <p>Masukkan file csv</p>
-    <a href="/analyze">Analisis Data</a>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Home - Sistem Analisis Bisnis{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section fade-in">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-4">Sistem Analisis Data Bisnis</h1>
+                <p class="lead mb-4">Analisis bisnis cerdas berdasarkan rating dan ulasan dengan teknologi AI untuk pengambilan keputusan yang lebih baik.</p>
+                <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+                    <a href="/analyze" class="btn btn-light btn-lg">
+                        <i class="fas fa-play-circle me-2"></i>Mulai Analisis
+                    </a>
+                    <a href="#features" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-info-circle me-2"></i>Pelajari Fitur
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-5">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-lg-8 mx-auto text-center">
+                <h2 class="h1 mb-4">Fitur Unggulan</h2>
+                <p class="lead text-muted">Platform analisis bisnis lengkap dengan teknologi terkini</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card card border-0 shadow-custom">
+                    <div class="card-body">
+                        <div class="text-gradient mb-3">
+                            <i class="fas fa-chart-bar fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">Analisis Rating Mendalam</h5>
+                        <p class="card-text text-muted">Identifikasi bisnis dengan performa terbaik berdasarkan rating dan ulasan pelanggan.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-card card border-0 shadow-custom">
+                    <div class="card-body">
+                        <div class="text-gradient mb-3">
+                            <i class="fas fa-brain fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">AI-Powered Insights</h5>
+                        <p class="card-text text-muted">Dapatkan rekomendasi cerdas dan analisis mendalam dari teknologi AI terdepan.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="feature-card card border-0 shadow-custom">
+                    <div class="card-body">
+                        <div class="text-gradient mb-3">
+                            <i class="fas fa-mobile-alt fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">Responsive Design</h5>
+                        <p class="card-text text-muted">Akses sistem dari berbagai perangkat dengan tampilan yang optimal di semua ukuran layar.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="bg-light py-5">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-lg-8 mx-auto text-center">
+                <h2 class="h1 mb-4">Cara Kerja Sistem</h2>
+                <p class="lead text-muted">Hanya dalam 4 langkah sederhana</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="text-center">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <span class="h4 mb-0">1</span>
+                    </div>
+                    <h5>Upload Data</h5>
+                    <p class="text-muted">Upload file CSV berisi data bisnis Anda</p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="text-center">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <span class="h4 mb-0">2</span>
+                    </div>
+                    <h5>Analisis Otomatis</h5>
+                    <p class="text-muted">Sistem menganalisis data secara otomatis</p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="text-center">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <span class="h4 mb-0">3</span>
+                    </div>
+                    <h5>AI Processing</h5>
+                    <p class="text-muted">AI memberikan insights dan rekomendasi</p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="text-center">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <span class="h4 mb-0">4</span>
+                    </div>
+                    <h5>Hasil Lengkap</h5>
+                    <p class="text-muted">Dapatkan laporan analisis komprehensif</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

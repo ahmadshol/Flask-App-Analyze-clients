@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, flash, redirect, url_for, jsonify
+from flask import send_from_directory
 from datetime import datetime
 from groq import Groq
 import pandas as pd
@@ -9,7 +10,7 @@ import math
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'  # Required for flash messages
 
-AI_KEY = "your_API_key_here"
+AI_KEY = os.getenv('GROQ_API_KEY', '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')
 
 client = Groq(api_key=AI_KEY)
 
@@ -216,6 +217,10 @@ def ai_call(df, analysis_results):
 @app.route('/')
 def main():
     return render_template('index.html')
+
+@app.route('/static/<path:filename>')
+def static_files(filename):
+    return send_from_directory('static', filename)
 
 @app.route('/analyze', methods=['GET', 'POST'])
 def analyze_business():

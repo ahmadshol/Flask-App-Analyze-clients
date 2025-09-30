@@ -1,452 +1,493 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analisis Data Bisnis</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        .card {
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+{% extends "base.html" %}
+
+{% block title %}Analyze Business - Sistem Analisis Bisnis{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Additional styles for analyze page */
+    .file-upload-area {
+        border: 2px dashed #dee2e6;
+        border-radius: 15px;
+        padding: 3rem 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: #fafafa;
+    }
+    
+    .file-upload-area:hover {
+        border-color: var(--primary-color);
+        background: #f8f9fa;
+    }
+    
+    .file-upload-area.dragover {
+        border-color: var(--primary-color);
+        background: #e3f2fd;
+    }
+    
+    .business-table {
+        font-size: 0.875rem;
+    }
+    
+    @media (max-width: 768px) {
+        .business-table {
+            font-size: 0.8rem;
         }
-        .analysis-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border: 2px solid #dee2e6;
-        }
-        .highlight {
-            background: #e3f2fd;
-            padding: 15px;
-            border-radius: 5px;
-            border-left: 4px solid #2196f3;
-        }
-        .rating-high {
-            color: #28a745;
-            font-weight: bold;
-        }
-        .rating-medium {
-            color: #ffc107;
-            font-weight: bold;
-        }
-        .rating-low {
-            color: #dc3545;
-            font-weight: bold;
-        }
-        .pagination {
-            margin-top: 20px;
-        }
-        .stats-card {
-            text-align: center;
-            padding: 15px;
-        }
-        .stats-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #2196f3;
-        }
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-        .table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-        }
-        .close-analysis-btn {
-            position: sticky;
-            top: 20px;
-            z-index: 1000;
-        }
-        .section-header {
-            display: flex;
-            justify-content: between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container mt-4">
-        <h1 class="text-center mb-4">Analisis Data Bisnis</h1>
         
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        .table th, .table td {
+            padding: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
 
-        <!-- Upload Form -->
-        <div class="card">
-            <div class="card-header">
-                <h5><i class="fas fa-upload"></i> Upload File CSV</h5>
-            </div>
-            <div class="card-body">
-                <form method="POST" enctype="multipart/form-data" id="uploadForm">
-                    <div class="mb-3">
-                        <label for="csv_file" class="form-label">Pilih file CSV dengan kolom: nama, nomor_telepon, kategori_usaha, lokasi, rating, jumlah_ulasan, email, website</label>
-                        <input class="form-control" type="file" id="csv_file" name="csv_file" accept=".csv" required>
-                        <div class="form-text">File CSV dapat berisi ribuan data, sistem akan memproses semuanya.</div>
-                    </div>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-chart-bar"></i> Analisis Data
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Results Section -->
-        {% if analysis_success and results %}
-        <div class="analysis-section">
-            <!-- Close Analysis Button -->
-            <div class="text-end mb-4">
-                <form method="POST" action="/close_analysis" id="closeAnalysisForm">
-                    <button type="submit" class="btn btn-outline-danger">
-                        <i class="fas fa-times-circle"></i> Tutup Analisis & Mulai Baru
-                    </button>
-                </form>
-            </div>
-
-            <h2 class="mb-4"><i class="fas fa-chart-line"></i> Hasil Analisis</h2>
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="text-center mb-4 fade-in">Analisis Data Bisnis</h1>
             
-            <!-- Data Summary -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5>📈 Ringkasan Data</h5>
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show fade-in" role="alert">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' if category == 'success' else 'info-circle' }} me-2"></i>
+                                <span>{{ message }}</span>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Upload Form -->
+            <div class="card shadow-custom border-0 fade-in">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-upload me-2"></i>Upload File CSV
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="stats-card">
-                                <div class="stats-number">{{ results.statistics.total_businesses }}</div>
-                                <div>Total Bisnis</div>
+                    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                        <div class="file-upload-area mb-4" id="fileUploadArea">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                            <h5 class="mb-3">Drag & Drop file CSV Anda</h5>
+                            <p class="text-muted mb-3">atau</p>
+                            <div class="mb-3">
+                                <input class="form-control" type="file" id="csv_file" name="csv_file" accept=".csv" required>
                             </div>
+                            <small class="text-muted">Format yang didukung: CSV dengan kolom: nama, rating, jumlah_ulasan, kategori_usaha, dll.</small>
                         </div>
-                        <div class="col-md-3">
-                            <div class="stats-card">
-                                <div class="stats-number">{{ results.statistics.avg_rating }}</div>
-                                <div>Rata-rata Rating</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="stats-card">
-                                <div class="stats-number">{{ results.statistics.avg_reviews }}</div>
-                                <div>Rata-rata Ulasan</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="stats-card">
-                                <div class="stats-number">{{ results.statistics.total_reviews }}</div>
-                                <div>Total Ulasan</div>
-                            </div>
-                        </div>
-                    </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-chart-bar me-2"></i>Analisis Data
+                        </button>
+                    </form>
                 </div>
             </div>
 
-            <!-- Top Performers -->
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <div class="highlight">
-                        <h4>🏆 Rating Tertinggi</h4>
-                        <p><strong>{{ results.highest_rated.nama }}</strong></p>
-                        <p>Rating: <span class="rating-high">{{ results.highest_rated.rating }} ⭐</span></p>
-                        <p>Ulasan: {{ results.highest_rated.jumlah_ulasan }}</p>
-                        <p>Kategori: {{ results.highest_rated.kategori }}</p>
-                    </div>
+            <!-- Results Section -->
+            {% if analysis_success and results %}
+            <div class="analysis-section mt-5 fade-in">
+                <!-- Close Analysis Button -->
+                <div class="text-end mb-4">
+                    <form method="POST" action="/close_analysis" id="closeAnalysisForm">
+                        <button type="submit" class="btn btn-outline-danger btn-lg">
+                            <i class="fas fa-times-circle me-2"></i>Tutup Analisis & Mulai Baru
+                        </button>
+                    </form>
                 </div>
-                <div class="col-md-4">
-                    <div class="highlight">
-                        <h4>📊 Ulasan Terbanyak</h4>
-                        <p><strong>{{ results.most_reviewed.nama }}</strong></p>
-                        <p>Rating: 
-                            <span class="{% if results.most_reviewed.rating >= 4.5 %}rating-high{% elif results.most_reviewed.rating >= 3.5 %}rating-medium{% else %}rating-low{% endif %}">
-                                {{ results.most_reviewed.rating }} ⭐
-                            </span>
-                        </p>
-                        <p>Ulasan: {{ results.most_reviewed.jumlah_ulasan }}</p>
-                        <p>Kategori: {{ results.most_reviewed.kategori }}</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="highlight">
-                        <h4>⚠️ Perlu Perhatian</h4>
-                        <p><strong>{{ results.lowest_rated.nama }}</strong></p>
-                        <p>Rating: <span class="rating-low">{{ results.lowest_rated.rating }} ⭐</span></p>
-                        <p>Ulasan: {{ results.lowest_rated.jumlah_ulasan }}</p>
-                        <p>Kategori: {{ results.lowest_rated.kategori }}</p>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Top 10 Tables -->
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>Top 10 Rating Tertinggi</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-striped table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Nama</th>
-                                            <th>Rating</th>
-                                            <th>Ulasan</th>
-                                            {% if results.top_10_rating and results.top_10_rating[0].kategori_usaha %}
-                                            <th>Kategori</th>
-                                            {% endif %}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for business in results.top_10_rating %}
-                                        <tr>
-                                            <td>{{ business.nama }}</td>
-                                            <td class="rating-high">{{ business.rating }}</td>
-                                            <td>{{ business.jumlah_ulasan }}</td>
-                                            {% if business.kategori_usaha %}
-                                            <td>{{ business.kategori_usaha }}</td>
-                                            {% endif %}
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
+                <h2 class="text-center mb-5">
+                    <i class="fas fa-chart-line me-2"></i>Hasil Analisis
+                </h2>
+                
+                <!-- Data Summary -->
+                <div class="card shadow-custom border-0 mb-5">
+                    <div class="card-header bg-gradient text-white">
+                        <h5 class="mb-0">📈 Ringkasan Data</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-6 col-md-3">
+                                <div class="stats-card">
+                                    <div class="stats-number">{{ results.statistics.total_businesses }}</div>
+                                    <div class="text-muted">Total Bisnis</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="stats-card">
+                                    <div class="stats-number">{{ results.statistics.avg_rating }}</div>
+                                    <div class="text-muted">Rata-rata Rating</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="stats-card">
+                                    <div class="stats-number">{{ results.statistics.avg_reviews }}</div>
+                                    <div class="text-muted">Rata-rata Ulasan</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="stats-card">
+                                    <div class="stats-number">{{ results.statistics.total_reviews }}</div>
+                                    <div class="text-muted">Total Ulasan</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>Top 10 Ulasan Terbanyak</h5>
+
+                <!-- Top Performers -->
+                <div class="row g-4 mb-5">
+                    <div class="col-md-4">
+                        <div class="highlight h-100">
+                            <h4>🏆 Rating Tertinggi</h4>
+                            <p class="h5"><strong>{{ results.highest_rated.nama }}</strong></p>
+                            <p>Rating: <span class="rating-high">{{ results.highest_rated.rating }} ⭐</span></p>
+                            <p>Ulasan: {{ results.highest_rated.jumlah_ulasan }}</p>
+                            <p>Kategori: {{ results.highest_rated.kategori }}</p>
                         </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-striped table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Nama</th>
-                                            <th>Rating</th>
-                                            <th>Ulasan</th>
-                                            {% if results.top_10_reviews and results.top_10_reviews[0].kategori_usaha %}
-                                            <th>Kategori</th>
-                                            {% endif %}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for business in results.top_10_reviews %}
-                                        <tr>
-                                            <td>{{ business.nama }}</td>
-                                            <td class="{% if business.rating >= 4.5 %}rating-high{% elif business.rating >= 3.5 %}rating-medium{% else %}rating-low{% endif %}">
-                                                {{ business.rating }}
-                                            </td>
-                                            <td>{{ business.jumlah_ulasan }}</td>
-                                            {% if business.kategori_usaha %}
-                                            <td>{{ business.kategori_usaha }}</td>
-                                            {% endif %}
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="highlight h-100">
+                            <h4>📊 Ulasan Terbanyak</h4>
+                            <p class="h5"><strong>{{ results.most_reviewed.nama }}</strong></p>
+                            <p>Rating: 
+                                <span class="{% if results.most_reviewed.rating >= 4.5 %}rating-high{% elif results.most_reviewed.rating >= 3.5 %}rating-medium{% else %}rating-low{% endif %}">
+                                    {{ results.most_reviewed.rating }} ⭐
+                                </span>
+                            </p>
+                            <p>Ulasan: {{ results.most_reviewed.jumlah_ulasan }}</p>
+                            <p>Kategori: {{ results.most_reviewed.kategori }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="highlight h-100">
+                            <h4>⚠️ Perlu Perhatian</h4>
+                            <p class="h5"><strong>{{ results.lowest_rated.nama }}</strong></p>
+                            <p>Rating: <span class="rating-low">{{ results.lowest_rated.rating }} ⭐</span></p>
+                            <p>Ulasan: {{ results.lowest_rated.jumlah_ulasan }}</p>
+                            <p>Kategori: {{ results.lowest_rated.kategori }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top 10 Tables -->
+                <div class="row g-4 mb-5">
+                    <div class="col-lg-6">
+                        <div class="card shadow-custom border-0 h-100">
+                            <div class="card-header bg-gradient text-white">
+                                <h5 class="mb-0">Top 10 Rating Tertinggi</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-sm business-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Nama</th>
+                                                <th>Rating</th>
+                                                <th>Ulasan</th>
+                                                {% if results.top_10_rating and results.top_10_rating[0].kategori_usaha %}
+                                                <th>Kategori</th>
+                                                {% endif %}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for business in results.top_10_rating %}
+                                            <tr>
+                                                <td class="text-truncate" style="max-width: 150px;" title="{{ business.nama }}">{{ business.nama }}</td>
+                                                <td class="rating-high">{{ business.rating }}</td>
+                                                <td>{{ business.jumlah_ulasan }}</td>
+                                                {% if business.kategori_usaha %}
+                                                <td class="text-truncate" style="max-width: 100px;" title="{{ business.kategori_usaha }}">{{ business.kategori_usaha }}</td>
+                                                {% endif %}
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card shadow-custom border-0 h-100">
+                            <div class="card-header bg-gradient text-white">
+                                <h5 class="mb-0">Top 10 Ulasan Terbanyak</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-sm business-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Nama</th>
+                                                <th>Rating</th>
+                                                <th>Ulasan</th>
+                                                {% if results.top_10_reviews and results.top_10_reviews[0].kategori_usaha %}
+                                                <th>Kategori</th>
+                                                {% endif %}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for business in results.top_10_reviews %}
+                                            <tr>
+                                                <td class="text-truncate" style="max-width: 150px;" title="{{ business.nama }}">{{ business.nama }}</td>
+                                                <td class="{% if business.rating >= 4.5 %}rating-high{% elif business.rating >= 3.5 %}rating-medium{% else %}rating-low{% endif %}">
+                                                    {{ business.rating }}
+                                                </td>
+                                                <td>{{ business.jumlah_ulasan }}</td>
+                                                {% if business.kategori_usaha %}
+                                                <td class="text-truncate" style="max-width: 100px;" title="{{ business.kategori_usaha }}">{{ business.kategori_usaha }}</td>
+                                                {% endif %}
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- All Data Section -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5><i class="fas fa-database"></i> Semua Data ({{ total_data }} records)</h5>
-                    <small class="text-muted">Gunakan scroll horizontal untuk melihat semua kolom</small>
-                </div>
-                <div class="card-body">
-                    <div id="allDataSection">
-                        <div class="loading" id="loadingAllData">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
+                <!-- All Data Section -->
+                <div class="card shadow-custom border-0 mb-5">
+                    <div class="card-header bg-gradient text-white d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                        <h5 class="mb-2 mb-md-0">
+                            <i class="fas fa-database me-2"></i>Semua Data ({{ total_data }} records)
+                        </h5>
+                        <small class="text-light">Gunakan scroll horizontal untuk melihat semua kolom</small>
+                    </div>
+                    <div class="card-body">
+                        <div id="allDataSection">
+                            <div class="loading" id="loadingAllData">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Memuat data...</p>
                             </div>
-                            <p class="mt-2">Memuat data...</p>
+                            <div id="allDataContent"></div>
                         </div>
-                        <div id="allDataContent"></div>
                     </div>
                 </div>
-            </div>
 
-            <!-- AI Analysis -->
-            {% if ai_output %}
-            <div class="card mt-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5>🤖 Analisis AI</h5>
-                    <span class="badge bg-info">Powered by AI</span>
-                </div>
-                <div class="card-body">
-                    <div class="ai-analysis">
-                        {{ ai_output|replace('\n', '<br>')|safe }}
+                <!-- AI Analysis -->
+                {% if ai_output %}
+                <div class="card shadow-custom border-0 mb-5">
+                    <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-robot me-2"></i>Analisis AI
+                        </h5>
+                        <span class="badge bg-dark">Powered by AI</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="ai-analysis">
+                            {{ ai_output|replace('\n', '<br>')|safe }}
+                        </div>
                     </div>
                 </div>
-            </div>
-            {% endif %}
+                {% endif %}
 
-            <!-- Close Analysis Button Bottom -->
-            <div class="text-center mt-4">
-                <form method="POST" action="/close_analysis">
-                    <button type="submit" class="btn btn-lg btn-outline-danger">
-                        <i class="fas fa-times-circle"></i> Tutup Analisis & Mulai Baru
-                    </button>
+                <!-- Close Analysis Button Bottom -->
+                <div class="text-center mt-5">
+                    <form method="POST" action="/close_analysis">
+                        <button type="submit" class="btn btn-outline-danger btn-lg">
+                            <i class="fas fa-times-circle me-2"></i>Tutup Analisis & Mulai Baru
+                        </button>
+                    </form>
                     <p class="text-muted mt-2">Dengan menutup analisis, semua data akan direset dan Anda dapat mengupload file baru</p>
-                </form>
+                </div>
             </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
+</div>
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Load all data with pagination
-        function loadAllData(page = 1) {
-            document.getElementById('loadingAllData').style.display = 'block';
-            document.getElementById('allDataContent').innerHTML = '';
+{% block extra_js %}
+<script>
+    // File upload drag and drop
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const fileInput = document.getElementById('csv_file');
+        
+        if (fileUploadArea && fileInput) {
+            // Highlight drop area when file is dragged over
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                fileUploadArea.addEventListener(eventName, preventDefaults, false);
+            });
             
-            fetch(`/get_all_data?page=${page}&per_page=50`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('loadingAllData').style.display = 'none';
-                    
-                    if (data.error) {
-                        document.getElementById('allDataContent').innerHTML = 
-                            `<div class="alert alert-danger">${data.error}</div>`;
-                        return;
-                    }
-                    
-                    displayAllData(data);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('loadingAllData').style.display = 'none';
-                    document.getElementById('allDataContent').innerHTML = 
-                        '<div class="alert alert-danger">Error memuat data</div>';
-                });
-        }
-
-        function displayAllData(data) {
-            let html = '';
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
             
-            if (!data.data || data.data.length === 0) {
-                html = '<div class="alert alert-warning">Tidak ada data.</div>';
-            } else {
-                // Get all column names from first record
-                const columns = Object.keys(data.data[0]);
+            ['dragenter', 'dragover'].forEach(eventName => {
+                fileUploadArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                fileUploadArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                fileUploadArea.classList.add('dragover');
+            }
+            
+            function unhighlight() {
+                fileUploadArea.classList.remove('dragover');
+            }
+            
+            // Handle dropped files
+            fileUploadArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                fileInput.files = files;
                 
-                html = `
-                <div class="table-responsive">
-                    <table class="table table-striped table-sm">
-                        <thead>
-                            <tr>
-                                ${columns.map(key => 
-                                    `<th>${key.replace('_', ' ').toUpperCase()}</th>`
-                                ).join('')}
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-                
-                // Table rows
-                data.data.forEach(business => {
-                    html += '<tr>';
-                    columns.forEach(column => {
-                        let value = business[column];
-                        // Handle null/undefined values
-                        if (value === null || value === undefined || value === '') {
-                            value = '-';
-                        }
-                        // Format rating with stars
-                        if (column === 'rating' && !isNaN(parseFloat(value))) {
-                            const ratingClass = parseFloat(value) >= 4.5 ? 'rating-high' : 
-                                              parseFloat(value) >= 3.5 ? 'rating-medium' : 'rating-low';
-                            html += `<td class="${ratingClass}">${parseFloat(value).toFixed(2)} ⭐</td>`;
-                        } else {
-                            html += `<td>${value}</td>`;
-                        }
-                    });
-                    html += '</tr>';
-                });
-                
-                html += '</tbody></table></div>';
-                
-                // Pagination
-                if (data.pagination && data.pagination.total_pages > 1) {
-                    html += createPagination(data.pagination);
+                // Update file input label
+                if (files.length > 0) {
+                    const fileName = files[0].name;
+                    fileUploadArea.querySelector('h5').textContent = `File selected: ${fileName}`;
                 }
             }
-            
-            document.getElementById('allDataContent').innerHTML = html;
         }
-
-        function createPagination(pagination) {
-            let html = '<nav><ul class="pagination justify-content-center">';
-            
-            // Previous button
-            if (pagination.page > 1) {
-                html += `<li class="page-item">
-                    <a class="page-link" href="#" onclick="loadAllData(${pagination.page - 1}); return false;">Previous</a>
-                </li>`;
-            }
-            
-            // Page numbers
-            const startPage = Math.max(1, pagination.page - 2);
-            const endPage = Math.min(pagination.total_pages, pagination.page + 2);
-            
-            for (let i = startPage; i <= endPage; i++) {
-                if (i === pagination.page) {
-                    html += `<li class="page-item active"><span class="page-link">${i}</span></li>`;
-                } else {
-                    html += `<li class="page-item">
-                        <a class="page-link" href="#" onclick="loadAllData(${i}); return false;">${i}</a>
-                    </li>`;
-                }
-            }
-            
-            // Next button
-            if (pagination.page < pagination.total_pages) {
-                html += `<li class="page-item">
-                    <a class="page-link" href="#" onclick="loadAllData(${pagination.page + 1}); return false;">Next</a>
-                </li>`;
-            }
-            
-            html += '</ul></nav>';
-            return html;
-        }
-
+        
         // Load all data when page is ready
         {% if analysis_success and results %}
-        document.addEventListener('DOMContentLoaded', function() {
-            loadAllData();
-        });
+        loadAllData();
         {% endif %}
-
+        
         // Confirmation for close analysis
-        document.addEventListener('DOMContentLoaded', function() {
-            const closeForms = document.querySelectorAll('form[action="/close_analysis"]');
-            closeForms.forEach(form => {
-                form.addEventListener('submit', function(e) {
-                    if (!confirm('Apakah Anda yakin ingin menutup analisis? Semua data akan direset dan Anda dapat memulai analisis baru.')) {
-                        e.preventDefault();
-                    }
-                });
+        const closeForms = document.querySelectorAll('form[action="/close_analysis"]');
+        closeForms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                if (!confirm('Apakah Anda yakin ingin menutup analisis? Semua data akan direset dan Anda dapat memulai analisis baru.')) {
+                    e.preventDefault();
+                }
             });
         });
-    </script>
-</body>
-</html>
+    });
+
+    // Load all data with pagination
+    function loadAllData(page = 1) {
+        document.getElementById('loadingAllData').style.display = 'block';
+        document.getElementById('allDataContent').innerHTML = '';
+        
+        fetch(`/get_all_data?page=${page}&per_page=50`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loadingAllData').style.display = 'none';
+                
+                if (data.error) {
+                    document.getElementById('allDataContent').innerHTML = 
+                        `<div class="alert alert-danger">${data.error}</div>`;
+                    return;
+                }
+                
+                displayAllData(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('loadingAllData').style.display = 'none';
+                document.getElementById('allDataContent').innerHTML = 
+                    '<div class="alert alert-danger">Error memuat data</div>';
+            });
+    }
+
+    function displayAllData(data) {
+        let html = '';
+        
+        if (!data.data || data.data.length === 0) {
+            html = '<div class="alert alert-warning">Tidak ada data.</div>';
+        } else {
+            // Get all column names from first record
+            const columns = Object.keys(data.data[0]);
+            
+            html = `
+            <div class="table-responsive">
+                <table class="table table-striped table-sm business-table">
+                    <thead>
+                        <tr>
+                            ${columns.map(key => 
+                                `<th>${key.replace('_', ' ').toUpperCase()}</th>`
+                            ).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            // Table rows
+            data.data.forEach(business => {
+                html += '<tr>';
+                columns.forEach(column => {
+                    let value = business[column];
+                    // Handle null/undefined values
+                    if (value === null || value === undefined || value === '') {
+                        value = '-';
+                    }
+                    // Format rating with stars
+                    if (column === 'rating' && !isNaN(parseFloat(value))) {
+                        const ratingClass = parseFloat(value) >= 4.5 ? 'rating-high' : 
+                                          parseFloat(value) >= 3.5 ? 'rating-medium' : 'rating-low';
+                        html += `<td class="${ratingClass}">${parseFloat(value).toFixed(2)} ⭐</td>`;
+                    } else {
+                        // Truncate long text for mobile
+                        html += `<td class="text-truncate" style="max-width: 150px;" title="${value}">${value}</td>`;
+                    }
+                });
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table></div>';
+            
+            // Pagination
+            if (data.pagination && data.pagination.total_pages > 1) {
+                html += createPagination(data.pagination);
+            }
+        }
+        
+        document.getElementById('allDataContent').innerHTML = html;
+    }
+
+    function createPagination(pagination) {
+        let html = '<nav aria-label="Page navigation"><ul class="pagination justify-content-center flex-wrap">';
+        
+        // Previous button
+        if (pagination.page > 1) {
+            html += `<li class="page-item">
+                <a class="page-link" href="#" onclick="loadAllData(${pagination.page - 1}); return false;" aria-label="Previous">
+                    <span aria-hidden="true">&laquo; Previous</span>
+                </a>
+            </li>`;
+        }
+        
+        // Page numbers
+        const startPage = Math.max(1, pagination.page - 2);
+        const endPage = Math.min(pagination.total_pages, pagination.page + 2);
+        
+        for (let i = startPage; i <= endPage; i++) {
+            if (i === pagination.page) {
+                html += `<li class="page-item active" aria-current="page">
+                    <span class="page-link">${i}</span>
+                </li>`;
+            } else {
+                html += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="loadAllData(${i}); return false;">${i}</a>
+                </li>`;
+            }
+        }
+        
+        // Next button
+        if (pagination.page < pagination.total_pages) {
+            html += `<li class="page-item">
+                <a class="page-link" href="#" onclick="loadAllData(${pagination.page + 1}); return false;" aria-label="Next">
+                    <span aria-hidden="true">Next &raquo;</span>
+                </a>
+            </li>`;
+        }
+        
+        html += '</ul></nav>';
+        return html;
+    }
+</script>
+{% endblock %}
