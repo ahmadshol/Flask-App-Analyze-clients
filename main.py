@@ -12,7 +12,7 @@ from flask import send_file
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'  # Required for flash messages
 
-AI_KEY = os.getenv('GROQ_API_KEY', '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')
+AI_KEY = os.getenv('GROQ_API_KEY', 'Your_API_KEY')
 
 client = Groq(api_key=AI_KEY)
 
