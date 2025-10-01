@@ -433,6 +433,28 @@ def download_results():
         flash(f"Gagal membuat file CSV: {str(e)}", "error")
         return redirect(url_for('analyze_business'))
 
+@app.route('/download_template')
+def download_template():
+    try:
+        # Buat template CSV sesuai kolom wajib
+        columns = ["nama", "nomor_telepon", "kategori_usaha", "lokasi", "rating", "jumlah_ulasan", "email", "website"]
+        df_template = pd.DataFrame(columns=columns)
+
+        # Simpan ke buffer
+        buffer = io.BytesIO()
+        df_template.to_csv(buffer, index=False, encoding="utf-8-sig")
+        buffer.seek(0)
+
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name="template_data_bisnis.csv",
+            mimetype="text/csv"
+        )
+    except Exception as e:
+        flash(f"Error membuat template CSV: {str(e)}", "error")
+        return redirect(url_for("analyze_business"))
+    
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)
