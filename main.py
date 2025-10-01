@@ -6,6 +6,8 @@ import pandas as pd
 import io
 import os
 import math
+from flask import send_file
+
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'  # Required for flash messages
@@ -338,6 +340,99 @@ def get_all_data():
     except Exception as e:
         print(f"Get all data error: {e}")
         return jsonify({'error': f'Error mengambil data: {str(e)}'})
+    
+@app.route('/download_results', methods=['GET'])
+def download_results():
+    global uploaded_data
+    
+    if uploaded_data is None:
+        flash("Tidak ada data yang dianalisis untuk diunduh.", "error")
+        return redirect(url_for('analyze_business'))
+
+    try:
+        # Jalankan kembali analisis agar sinkron dengan yang ditampilkan
+        analysis_results, error = analyze_business_data(uploaded_data)
+        if error:
+            flash(error, "error")
+            return redirect(url_for('analyze_business'))
+
+        # Buat list dict sesuai urutan hasil analisis
+        export_data = []
+
+        # Ringkasan utama
+        export_data.append({
+            "Bagian": "Ringkasan",
+            "Keterangan": "Total Bisnis",
+            "Nilai": analysis_results['statistics']['total_businesses']
+        })
+        export_data.append({
+            "Bagian": "Ringkasan",
+            "Keterangan": "Rata-rata Rating",
+            "Nilai": analysis_results['statistics']['avg_rating']
+        })
+        export_data.append({
+            "Bagian": "Ringkasan",
+            "Keterangan": "Rata-rata Ulasan",
+            "Nilai": analysis_results['statistics']['avg_reviews']
+        })
+        export_data.append({
+            "Bagian": "Ringkasan",
+            "Keterangan": "Total Ulasan",
+            "Nilai": analysis_results['statistics']['total_reviews']
+        })
+
+        # Bisnis dengan performa tertentu
+        export_data.append({
+            "Bagian": "Bisnis Tertinggi",
+            "Keterangan": analysis_results['highest_rated']['nama'],
+            "Nilai": f"Rating: {analysis_results['highest_rated']['rating']} | Ulasan: {analysis_results['highest_rated']['jumlah_ulasan']} | Kategori: {analysis_results['highest_rated']['kategori']}"
+        })
+        export_data.append({
+            "Bagian": "Bisnis Ulasan Terbanyak",
+            "Keterangan": analysis_results['most_reviewed']['nama'],
+            "Nilai": f"Rating: {analysis_results['most_reviewed']['rating']} | Ulasan: {analysis_results['most_reviewed']['jumlah_ulasan']} | Kategori: {analysis_results['most_reviewed']['kategori']}"
+        })
+        export_data.append({
+            "Bagian": "Bisnis Terendah",
+            "Keterangan": analysis_results['lowest_rated']['nama'],
+            "Nilai": f"Rating: {analysis_results['lowest_rated']['rating']} | Ulasan: {analysis_results['lowest_rated']['jumlah_ulasan']} | Kategori: {analysis_results['lowest_rated']['kategori']}"
+        })
+
+        # Top 10 Rating
+        for idx, row in enumerate(analysis_results['top_10_rating'], start=1):
+            export_data.append({
+                "Bagian": "Top 10 Rating",
+                "Keterangan": f"{idx}. {row['nama']}",
+                "Nilai": f"Rating: {row['rating']} | Ulasan: {row['jumlah_ulasan']} | Kategori: {row.get('kategori_usaha', '-')}"
+            })
+
+        # Top 10 Ulasan
+        for idx, row in enumerate(analysis_results['top_10_reviews'], start=1):
+            export_data.append({
+                "Bagian": "Top 10 Ulasan",
+                "Keterangan": f"{idx}. {row['nama']}",
+                "Nilai": f"Rating: {row['rating']} | Ulasan: {row['jumlah_ulasan']} | Kategori: {row.get('kategori_usaha', '-')}"
+            })
+
+        # Convert ke DataFrame
+        df_export = pd.DataFrame(export_data)
+
+        # Simpan ke buffer
+        buf = io.StringIO()
+        df_export.to_csv(buf, index=False, encoding="utf-8-sig")
+        buf.seek(0)
+
+        return send_file(
+            io.BytesIO(buf.getvalue().encode("utf-8-sig")),
+            mimetype="text/csv",
+            as_attachment=True,
+            download_name=f"hasil_analisis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        )
+
+    except Exception as e:
+        flash(f"Gagal membuat file CSV: {str(e)}", "error")
+        return redirect(url_for('analyze_business'))
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)
