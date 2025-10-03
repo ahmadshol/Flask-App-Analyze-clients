@@ -185,7 +185,7 @@
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
-                                    <table class="table table-striped table-sm business-table">
+                                    <table class="table table-striped table-sm business-table text-white">
                                         <thead>
                                             <tr>
                                                 <th>Nama</th>
@@ -194,17 +194,39 @@
                                                 {% if results.top_10_rating and results.top_10_rating[0].kategori_usaha %}
                                                 <th>Kategori</th>
                                                 {% endif %}
+                                                <th>Nomor Telepon</th>
+                                                <th>Website</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {% for business in results.top_10_rating %}
                                             <tr>
-                                                <td class="text-truncate" style="max-width: 150px;" title="{{ business.nama }}">{{ business.nama }}</td>
+                                                <td class="text-truncate" style="max-width: 150px;" title="{{ business.nama }}">
+                                                    {{ business.nama }}
+                                                </td>
                                                 <td class="rating-high">{{ business.rating }}</td>
                                                 <td>{{ business.jumlah_ulasan }}</td>
                                                 {% if business.kategori_usaha %}
-                                                <td class="text-truncate" style="max-width: 100px;" title="{{ business.kategori_usaha }}">{{ business.kategori_usaha }}</td>
+                                                <td class="text-truncate" style="max-width: 100px;" title="{{ business.kategori_usaha }}">
+                                                    {{ business.kategori_usaha }}
+                                                </td>
                                                 {% endif %}
+                                                <td>
+                                                    {% if business.nomor_telepon %}
+                                                        {{ business.nomor_telepon }}
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if business.website %}
+                                                        <a href="{{ business.website }}" target="_blank" class="text-decoration-none text-info">
+                                                            {{ business.website }}
+                                                        </a>
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                </td>
                                             </tr>
                                             {% endfor %}
                                         </tbody>
@@ -229,6 +251,8 @@
                                                 {% if results.top_10_reviews and results.top_10_reviews[0].kategori_usaha %}
                                                 <th>Kategori</th>
                                                 {% endif %}
+                                                <th>Nomor Telepon</th>
+                                                <th>Website</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -242,6 +266,22 @@
                                                 {% if business.kategori_usaha %}
                                                 <td class="text-truncate" style="max-width: 100px;" title="{{ business.kategori_usaha }}">{{ business.kategori_usaha }}</td>
                                                 {% endif %}
+                                                <td>
+                                                    {% if business.nomor_telepon %}
+                                                        {{ business.nomor_telepon }}
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if business.website %}
+                                                        <a href="{{ business.website }}" target="_blank" class="text-decoration-none text-info">
+                                                            {{ business.website }}
+                                                        </a>
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                </td>
                                             </tr>
                                             {% endfor %}
                                         </tbody>
@@ -249,6 +289,7 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
                     </div>
                 </div>
 

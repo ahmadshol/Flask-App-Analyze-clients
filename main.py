@@ -35,6 +35,14 @@ def analyze_business_data(df):
         df_clean['rating'] = pd.to_numeric(df_clean['rating'], errors='coerce')
         df_clean['jumlah_ulasan'] = pd.to_numeric(df_clean['jumlah_ulasan'], errors='coerce')
         
+        if 'website' in df_clean.columns:
+            df_clean['website'] = df_clean['website'].fillna('')
+        else:
+            df_clean['website'] = ''
+
+        if 'nomor_telepon' not in df_clean.columns:
+            df_clean['nomor_telepon'] = ''
+        
         # Hapus baris dengan nilai NaN
         df_clean = df_clean.dropna(subset=['rating', 'jumlah_ulasan'])
         
@@ -83,7 +91,7 @@ def analyze_business_data(df):
         if not df_clean.empty:
             top_10_rating_df = df_clean.nlargest(10, 'rating')
             # Pastikan kolom yang diperlukan ada
-            columns_to_include = ['nama', 'rating', 'jumlah_ulasan']
+            columns_to_include = ['nama', 'rating', 'jumlah_ulasan', 'nomor_telepon', 'website']
             if 'kategori_usaha' in top_10_rating_df.columns:
                 columns_to_include.append('kategori_usaha')
             top_10_rating = top_10_rating_df[columns_to_include].to_dict('records')
@@ -92,11 +100,11 @@ def analyze_business_data(df):
         top_10_reviews = []
         if not df_clean.empty:
             top_10_reviews_df = df_clean.nlargest(10, 'jumlah_ulasan')
-            columns_to_include = ['nama', 'rating', 'jumlah_ulasan']
+            columns_to_include = ['nama', 'rating', 'jumlah_ulasan', 'nomor_telepon', 'website']
             if 'kategori_usaha' in top_10_reviews_df.columns:
                 columns_to_include.append('kategori_usaha')
             top_10_reviews = top_10_reviews_df[columns_to_include].to_dict('records')
-        
+            
         # Analisis 8: Distribusi rating
         rating_distribution = {}
         if not df_clean.empty:
@@ -302,28 +310,30 @@ def get_all_data():
         page = int(request.args.get('page', 1))
         per_page = int(request.args.get('per_page', 50))
         
-        total_data = len(uploaded_data)
+        # 🔥 Urutkan data dulu sebelum dipotong per halaman
+        df_sorted = uploaded_data.copy()
+        if "rating" in df_sorted.columns and "jumlah_ulasan" in df_sorted.columns:
+            df_sorted = df_sorted.sort_values(
+                by=["rating", "jumlah_ulasan"], 
+                ascending=[False, False]
+            )
+        
+        total_data = len(df_sorted)
         total_pages = math.ceil(total_data / per_page)
         
         start_idx = (page - 1) * per_page
         end_idx = start_idx + per_page
-        
-        # Pastikan end_idx tidak melebihi panjang data
         end_idx = min(end_idx, total_data)
         
-        data_chunk = uploaded_data.iloc[start_idx:end_idx]
+        data_chunk = df_sorted.iloc[start_idx:end_idx]
         
-        # Konversi ke dictionary dengan handle NaN values
+        # Konversi ke dictionary (handle NaN)
         data_records = []
         for _, row in data_chunk.iterrows():
             record = {}
-            for col in uploaded_data.columns:
+            for col in df_sorted.columns:
                 value = row[col]
-                # Handle NaN values
-                if pd.isna(value):
-                    record[col] = None
-                else:
-                    record[col] = value
+                record[col] = None if pd.isna(value) else value
             data_records.append(record)
         
         return jsonify({
@@ -340,6 +350,7 @@ def get_all_data():
     except Exception as e:
         print(f"Get all data error: {e}")
         return jsonify({'error': f'Error mengambil data: {str(e)}'})
+
     
 @app.route('/download_results', methods=['GET'])
 def download_results():
@@ -403,7 +414,7 @@ def download_results():
             export_data.append({
                 "Bagian": "Top 10 Rating",
                 "Keterangan": f"{idx}. {row['nama']}",
-                "Nilai": f"Rating: {row['rating']} | Ulasan: {row['jumlah_ulasan']} | Kategori: {row.get('kategori_usaha', '-')}"
+                "Nilai": f"Rating: {row['rating']} | Ulasan: {row['jumlah_ulasan']} | Kategori: {row.get('kategori_usaha', '-')} | Telepon: {row.get('nomor_telepon', '-')} | Website: {row.get('website', '-')} "
             })
 
         # Top 10 Ulasan
@@ -411,7 +422,7 @@ def download_results():
             export_data.append({
                 "Bagian": "Top 10 Ulasan",
                 "Keterangan": f"{idx}. {row['nama']}",
-                "Nilai": f"Rating: {row['rating']} | Ulasan: {row['jumlah_ulasan']} | Kategori: {row.get('kategori_usaha', '-')}"
+                "Nilai": f"Rating: {row['rating']} | Ulasan: {row['jumlah_ulasan']} | Kategori: {row.get('kategori_usaha', '-')} | Telepon: {row.get('nomor_telepon', '-')} | Website: {row.get('website', '-')}"
             })
 
         # Convert ke DataFrame
